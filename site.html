@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title> Vaazha-O-Meter</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --glass-bg: rgba(255,255,255,0.06);
+    --overlay: rgba(0,0,0,0.45);
+    --accent: #fbc02d;
+  }
+  html,body { height:100%; margin:0; }
+  body {
+    font-family: Arial, sans-serif;
+    color: #fff;
+    background-image: url('we all have  been there.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  /* Updated here: remove black shade on intro page */
+  body::before {
+    content: none;
+  }
+  #introPage {
+    position:fixed; inset:0;
+    display:flex; align-items:center; justify-content:center;
+    text-align:center;
+    cursor:pointer;
+    z-index:1000;
+    transition: opacity 900ms ease, transform 900ms ease;
+  }
+ 
+
+ 
+  #introPage.fade-out { opacity:0; transform: scale(1.06); pointer-events:none; }
+  .section {
+    max-width: 920px;
+    margin: 56px auto;
+    padding: 22px;
+    border-radius: 14px;
+    text-align: center;
+    background: var(--glass-bg);
+    backdrop-filter: blur(10px) saturate(120%);
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+    transform: translateY(90px);
+    opacity: 0;
+    transition: transform 700ms cubic-bezier(.2,.9,.2,1), opacity 700ms ease;
+    display: none;
+  }
+  .section.show { transform: translateY(0); opacity:1; }
+  label { display:block; margin-top: 8px; color: #fff; font-weight:600; }
+  select, input[type="number"], button {
+    margin: 12px 0;
+    padding: 10px 14px;
+    width: 80%;
+    max-width: 520px;
+    font-size:16px;
+    border-radius:8px;
+    border: 1px solid rgba(255,255,255,0.06);
+    outline: none;
+  }
+  select, input[type="number"] {
+    background: rgba(255,255,255,0.04);
+    color: #fff;
+    -webkit-appearance: none;
+  }
+  select option { color: #000; }
+  button {
+    background: var(--accent);
+    border: none;
+    font-weight:700;
+    cursor: pointer;
+  }
+  button:hover { filter: brightness(.95); }
+  .result { font-size: 18px; margin-top: 14px; font-weight:700; color: #fff; }
+  .chart-container { margin-top:18px; display:none; opacity:0; transform: translateY(8px);
+    transition: opacity 500ms ease, transform 500ms ease; }
+  .chart-container.show { display:block; opacity:1; transform: translateY(0); }
+  canvas {
+    width:100% !important;
+    height:300px !important;
+    border-radius:10px;
+    background: rgba(255,255,255,0.03);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+  }
+  @media (max-width:600px){
+    .section { margin: 30px 16px; padding: 18px; }
+    #introText { font-size: 18px; }
+    select, input, button { width: 92%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="introPage">
+
+</div>
+
+<main class="section" id="calculatorSection">
+  <h1> Vaazha-O-Meter</h1>
+  <p>Find out exactly how much of a VAAZHA you or anyone is!!</p>
+
+  <label for="variety">Banana Variety</label>
+  <select id="variety">
+    <option value="nendran">Nendran (20 kg yield/plant)</option>
+    <option value="robusta">Robusta (30 kg yield/plant)</option>
+    <option value="poovan">Poovan (15 kg yield/plant)</option>
+    <option value="red">Red Banana (25 kg yield/plant)</option>
+  </select>
+
+  <label for="yearsInput">Years / Age</label>
+  <input id="yearsInput" type="number" min="1" max="120" placeholder="Enter years or age">
+
+  <div>
+    <button id="calcBtn">CALCULATE</button>
+  </div>
+
+  <div id="resultsContainer" style="margin-top:10px; display:none;">
+    <div id="bananaOutput" class="result"></div>
+    <div id="bananaChartContainer" class="chart-container">
+      <canvas id="bananaChart"></canvas>
+    </div>
+
+    <div id="lifeOutput" class="result"></div>
+    <div id="lifeChartContainer" class="chart-container">
+      <canvas id="lifeChart"></canvas>
+    </div>
+
+    <div id="investOutput" class="result" style="color:#ffd54f;"></div>
+    <div id="investChartContainer" class="chart-container">
+      <canvas id="investChart"></canvas>
+    </div>
+  </div>
+</main>
+
+<script>
+(() => {
+  const intro = document.getElementById('introPage');
+  const section = document.getElementById('calculatorSection');
+  const calcBtn = document.getElementById('calcBtn');
+  const yearsInput = document.getElementById('yearsInput');
+  const resultsContainer = document.getElementById('resultsContainer');
+  const bananaOutput = document.getElementById('bananaOutput');
+  const lifeOutput = document.getElementById('lifeOutput');
+  const investOutput = document.getElementById('investOutput');
+  const bananaChartContainer = document.getElementById('bananaChartContainer');
+  const lifeChartContainer = document.getElementById('lifeChartContainer');
+  const investChartContainer = document.getElementById('investChartContainer');
+  let bananaChart = null, lifeChart = null, investChart = null;
+
+  function showCalculator() {
+    intro.classList.add('fade-out');
+    setTimeout(() => {
+      intro.style.display = 'none';
+      section.style.display = 'block';
+      requestAnimationFrame(() => section.classList.add('show'));
+      yearsInput.focus();
+    }, 900);
+  }
+
+  intro.addEventListener('click', showCalculator);
+  intro.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') showCalculator(); });
+  yearsInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') calcBtn.click(); });
+
+  calcBtn.addEventListener('click', () => {
+    const years = parseInt(yearsInput.value);
+    const variety = document.getElementById('variety').value;
+    if (!Number.isInteger(years) || years <= 0) {
+      alert('Please enter a valid number of years (>=1).');
+      yearsInput.focus();
+      return;
+    }
+
+    resultsContainer.style.display = 'block';
+    setTimeout(() => {
+      bananaChartContainer.classList.add('show');
+      lifeChartContainer.classList.add('show');
+      investChartContainer.classList.add('show');
+    }, 50);
+
+    const totalExpense = calculateExpense(years);
+    calculateBanana(years, variety);
+    calculateInvestmentProfit(totalExpense, variety);
+  });
+
+  function calculateBanana(yearsBack, variety) {
+    const yields = { nendran:20, robusta:30, poovan:15, red:25 };
+    const yieldKg = yields[variety] || 20;
+    const currentYear = new Date().getFullYear();
+    const labels = [];
+    const profits = [];
+    let total = 0;
+
+    for (let i = 0; i < yearsBack; i++) {
+      const year = currentYear - (yearsBack - 1 - i);
+      const pricePerKg = 40 + Math.sin(i) * 5 + i * 0.8;
+      const costPerPlant = 100 + Math.cos(i) * 10 + i * 1.2;
+      const revenue = yieldKg * pricePerKg * 10;
+      const cost = costPerPlant * 10;
+      const profit = revenue - cost;
+
+      labels.push(String(year));
+      profits.push(Number(profit.toFixed(2)));
+      total += profit;
+    }
+
+    bananaOutput.textContent = `💵 Banana Profit over ${yearsBack} years: ₹${Math.round(total).toLocaleString('en-IN')}`;
+
+    if (bananaChart) bananaChart.destroy();
+    const ctx = document.getElementById('bananaChart').getContext('2d');
+    bananaChart = new Chart(ctx, {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Profit per Year (₹)', data: profits, backgroundColor: '#4caf50' }] },
+      options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+    });
+  }
+
+  function calculateExpense(age) {
+    const labels = [];
+    const expenses = [];
+    let total = 0;
+    for (let y = 1; y <= age; y++) {
+      let yearlyCost = (y <= 5) ? 150000 : (y <= 17) ? 200000 : (y <= 22) ? 350000 : 400000;
+      yearlyCost += Math.round(Math.sin(y/2) * 5000);
+      labels.push(String(y));
+      expenses.push(yearlyCost);
+      total += yearlyCost;
+    }
+
+    lifeOutput.textContent = `💰 Life Expenses over ${age} years: ₹${Math.round(total).toLocaleString('en-IN')}`;
+
+    if (lifeChart) lifeChart.destroy();
+    const ctx = document.getElementById('lifeChart').getContext('2d');
+    lifeChart = new Chart(ctx, {
+      type: 'line',
+      data: { labels, datasets: [{ label:'Yearly Expense (₹)', data: expenses, borderColor:'#ffeb3b', backgroundColor:'rgba(255,235,59,0.25)', fill:true }] },
+      options: { responsive:true, plugins:{legend:{display:false}}, scales:{ y:{ beginAtZero:true } } }
+    });
+
+    return total;
+  }
+
+  function calculateInvestmentProfit(totalExpense, variety) {
+    const yields = { nendran:20, robusta:30, poovan:15, red:25 };
+    const yieldKg = yields[variety] || 20;
+    const costPerPlant = 100;
+    const plants = Math.floor(totalExpense / costPerPlant);
+    const pricePerKg = 45; // avg price
+    const revenue = plants * yieldKg * pricePerKg;
+    const cost = plants * costPerPlant;
+    const profit = revenue - cost;
+
+    investOutput.textContent = `📈 If you invested ₹${totalExpense.toLocaleString('en-IN')} in banana farming, you’d make about ₹${Math.round(profit).toLocaleString('en-IN')} in one year!`;
+
+    if (investChart) investChart.destroy();
+    const ctx = document.getElementById('investChart').getContext('2d');
+    investChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: ['Profit', 'Cost'],
+        datasets: [{
+          data: [profit, cost],
+          backgroundColor: ['#81c784', '#ef5350']
+        }]
+      },
+      options: { 
+        responsive:true,
+        aspectRatio: 1
+      }
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
