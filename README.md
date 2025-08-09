@@ -15,13 +15,16 @@
 
 
 ### Project Description
-[2-3 lines about what your project does]
+The term Vaazha has become a popular synonym for a useless person. Everyone will have been called a Vaazha at least once in their lifetime.
+We found a way to measure how much of a VAAZHA you actually are!!
+Just input your age and your favourite Banana variety.
 
 ### The Problem (that doesn't exist)
-[What ridiculous problem are you solving?]
+How to measure how much of a VAAZHA you actually are?
 
 ### The Solution (that nobody asked for)
-[How are you solving it? Keep it fun!]
+Input your Vaazha's(can be your friend or yourself but most probably that one friend you just thought of) age and your favourite banana variety. We can calculate the profit his/her parents would have received if they actually planted a vaazha( the real banana plant) instead of..you know
+
 
 ## Technical Details
 ### Technologies/Components Used
@@ -55,16 +58,16 @@ proper name)
 
 ### Project Demo
 # Video
-[Add your demo video link here]
-*Explain what the video demonstrates*
 
-# Additional Demos
-[Add any extra demo materials/links]
+https://github.com/user-attachments/assets/86b07809-d937-48df-b3ac-e8df1a7c6dfa
 
-## Team Contributions
-- [Name 1]: [Specific contributions]
-- [Name 2]: [Specific contributions]
-- [Name 3]: [Specific contributions]
+
+We have an intro page that transitions into a calculator interface.Input age and banana variant. Gives output as 
+i) The profit your parents would have received if he/she weren't born and if the parents had planted banana plants around his/her house for that many years.
+ii) the expense his/her parents spent for their entire life
+iii)the profit they would have received if they invested the expense in banana plantation
+
+
 
 ---
 Made with ❤️ at TinkerHub Useless Projects 
